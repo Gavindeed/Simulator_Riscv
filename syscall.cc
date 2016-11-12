@@ -12,7 +12,7 @@ void sys_exit(){
 }
 
 void sys_write(lint reg10, lint reg11, lint reg12, Memory *memory){
-	//printf("sys_write\n");
+	printf("sys_write\n");
 
 	// we don't have fd
 	if (reg10 != 1){
@@ -22,13 +22,14 @@ void sys_write(lint reg10, lint reg11, lint reg12, Memory *memory){
 	else{
 		// need load function from Jingyue Gao
 		void* location = memory->Load(reg11, (int)reg12); 
-		write((int)reg10, location, (int)reg12);
+		write((int)reg10, location, 1);
+		//write((int)reg10, location, (int)reg12);
 	}
 }
 
 void sys_read(lint reg10, lint reg11, lint reg12, Memory *memory)
 {
-	//printf("sys_read\n");
+	printf("sys_read\n");
 
 	// we don't have fd
 	if (reg10 != 0)
@@ -38,7 +39,8 @@ void sys_read(lint reg10, lint reg11, lint reg12, Memory *memory)
 	}
 	else{
 		void* readposition = (void*)malloc((int)reg12);
-		read((int)reg10, readposition, (int)reg12);
+		read((int)reg10, readposition, 1);
+		//read((int)reg10, readposition, (int)reg12);
 		// need store function from Jingyue Gao
 		memory->Store(reg11, (int)reg12, (char*)readposition);
 		delete readposition;
@@ -47,7 +49,7 @@ void sys_read(lint reg10, lint reg11, lint reg12, Memory *memory)
 }
 
 void sys_gettimeofday(lint reg10, Memory *memory){
-	//printf("sys_gettimeofday\n");
+	printf("sys_gettimeofday\n");
 	struct timeval t;
 	if (gettimeofday(&t, NULL) == 0){
 		memory->Store(reg10, sizeof(t), (char*)&t);
@@ -59,7 +61,7 @@ void sys_gettimeofday(lint reg10, Memory *memory){
 }
 
 
-void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, Memory *memory)
+void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, Memory *memory, RegisterFile *file)
 {
 	switch(reg17){
 	case SYS_exit:
@@ -73,6 +75,18 @@ void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, Memory 
 		break;
 	case SYS_gettimeofday: 
 		sys_gettimeofday(reg10, memory);
+		break;
+	case SYS_close:
+		printf("sys_close, we just ignore it\n");
+		file->setInteger(A0, 1);
+		break;
+	case SYS_fstat:
+		printf("sys_fstat, we just ignore it\n");
+		file->setInteger(A0, 1);
+		break;
+	case SYS_brk:
+		printf("sys_brk, we just ignore it\n");
+		file->setInteger(A0, 1);
 		break;
 	default:
 		printf("%d syscall hasn't been defined\n", reg17);
