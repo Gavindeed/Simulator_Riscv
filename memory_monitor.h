@@ -12,6 +12,7 @@ class Memory
 		~Memory();
 		void* Load(lint ad,int length);
 		void Store(lint ad,int length,char*content);
+		void* Translate(lint ad);
 		Elf64_Addr entry;
 		Elf64_Addr inisp;
 	private:

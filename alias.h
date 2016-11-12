@@ -264,6 +264,8 @@
 #define FCVT_WU_D 97
 #define FCVY_D_W 105
 #define FCVT_D_WU 105
+#define FMV_X_D 113
+#define FMV_D_X 121
 
 #define PRIV 0
 

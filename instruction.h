@@ -15,6 +15,7 @@ public:
 	unsigned int rd;
 	unsigned int rs1;
 	unsigned int rs2;
+	unsigned int rs3;
 	unsigned int funct3;
 	unsigned int funct7;
 	unsigned int funct5;
