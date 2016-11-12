@@ -267,6 +267,9 @@
 #define FMV_X_D 113
 #define FMV_D_X 121
 
+#define FMUL_S 8
+#define FDIV_S 12
+
 #define PRIV 0
 
 

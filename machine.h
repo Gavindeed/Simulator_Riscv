@@ -9,7 +9,8 @@
 enum MachineState {Running, Error, Halt};
 enum ALUFun {ANull, Add, Sub, Mul, Div, And, Or, Xor, Less, Lessu, Shl, Shrl, Shra, Shlw, Shrlw, Shraw, 
 	Mulh, Mulhu, Mulhsu, Divu, Rem, Remu, Fadd, Fsub, Fmul, Fdiv, Fsqrt, Fcvtwd, Fcvtwud, Fcvtdw, Fcvtdwu, 
-	Fcvtld, Fcvtlud, Fcvtdl, Fcvtdlu, Fcvtsd, Fcvtds, Fsgnjd, Fsgnjnd, Fsgnjxd, Feqd, Fltd, Fled, Fmaddd, Fmsubd, Fnmaddd, Fnmsubd};
+	Fcvtld, Fcvtlud, Fcvtdl, Fcvtdlu, Fcvtsd, Fcvtds, Fsgnjd, Fsgnjnd, Fsgnjxd, Feqd, Fltd, Fled, Fmaddd, 
+	Fmsubd, Fnmaddd, Fnmsubd, Fcvtws, Fcvtwus, Fcvtsw, Fcvtswu, Fcvtls, Fcvtlus, Fcvtsl, Fcvtslu, Fmuls, Fdivs};
 enum ALUSrc {Rs2, Imm, Val4};
 enum MemFun {MNull, Read, MWrite};
 enum MemSize {MDouble, MWords, MHalfWords, MBytes, MWordsu, MHalfWordsu, MBytesu};

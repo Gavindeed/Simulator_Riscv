@@ -16,8 +16,10 @@ char *floatTable[32] = {"ft0", "ft1", "ft2", "ft3", "ft4", "ft5", "ft6", "ft7",
 
 Machine::Machine(char *filename)
 {
+	//printf("a1 %s\n", filename);
 	registerFile = new RegisterFile();
 	memory = new Memory(filename);
+	//printf("a2\n");
 	instruction = NULL;
 	registerFile->setPC(memory->entry);
 	registerFile->setInteger(SP, memory->inisp);
@@ -38,6 +40,7 @@ void Machine::setPC(lint newPC)
 
 void Machine::Run()
 {
+	//printf("run\n");
 	while(state == Running)
 	{
 		//printf("Run: %lx\n", registerFile->getInteger(8));
@@ -786,6 +789,42 @@ void Machine::Decode()
 			aluFun = Fsqrt;
 			if(verbose) printf("fsqrt.d $%s $%s\n", floatTable[rd], floatTable[rs1]);
 			break;
+		case FMUL_S:
+			aluFun = Fmuls;
+			if(verbose) printf("fmul.s $%s $%s $%s\n", floatTable[rd], floatTable[rs1], regTable[rs2]);
+			break;
+		case FDIV_S:
+			aluFun = Fdivs;
+			if(verbose) printf("fdiv.s $%s $%s $%s\n", floatTable[rd], floatTable[rs1], regTable[rs2]);
+			break;
+		case 96:
+			switch(instruction->rs2)
+			{
+			case 0:
+				aluFun = Fcvtws;
+				writeSize = WWords;
+				if(verbose) printf("fcvt.w.s $%s $%s\n", regTable[rd], floatTable[rs1]);
+				break;
+			case 1:
+				aluFun = Fcvtwus;
+				writeSize = WWords;
+				if(verbose) printf("fcvt.wu.s $%s $%s\n", regTable[rd], floatTable[rs1]);
+				break;
+			case 2:
+				aluFun = Fcvtls;
+				writeSize = WDouble;
+				if(verbose) printf("fcvt.l.s $%s $%s\n", regTable[rd], floatTable[rs1]);
+				break;
+			case 3:
+				aluFun = Fcvtlus;
+				writeSize = WDouble;
+				if(verbose) printf("fcvt.lu.s $%s $%s\n", regTable[rd], floatTable[rs1]);
+				break;
+			default:
+				BadCode();
+				break;
+			}
+			break;
 		case 97:
 			switch(instruction->rs2)
 			{
@@ -808,6 +847,36 @@ void Machine::Decode()
 				aluFun = Fcvtlud;
 				writeSize = WDouble;
 				if(verbose) printf("fcvt.lu.d $%s $%s\n", regTable[rd], floatTable[rs1]);
+				break;
+			default:
+				BadCode();
+				break;
+			}
+			break;
+		case 104:
+			switch(instruction->rs2)
+			{
+			case 0:
+				aluFun = Fcvtsw;
+				val1 = registerFile->getInteger(rs1);
+				val1 = (long long)((int)((unsigned int)val1));
+				if(verbose) printf("fcvt.s.w $%s $%s\n", floatTable[rd], regTable[rs1]);
+				break;
+			case 1:
+				aluFun = Fcvtswu;
+				val1 = registerFile->getInteger(rs1);
+				val1 = (unsigned int)val1;
+				if(verbose) printf("fcvt.s.wu $%s $%s\n", floatTable[rd], regTable[rs1]);
+				break;
+			case 2:
+				aluFun = Fcvtsl;
+				val1 = registerFile->getInteger(rs1);
+				if(verbose) printf("fcvt.s.l $%s $%s\n", floatTable[rd], regTable[rs1]);
+				break;
+			case 3:
+				aluFun = Fcvtslu;
+				val1 = registerFile->getInteger(rs1);
+				if(verbose) printf("fcvt.s.lu $%s $%s\n", floatTable[rd], regTable[rs1]);
 				break;
 			default:
 				BadCode();
@@ -1353,6 +1422,42 @@ void Machine::Execute()
 	case Fnmsubd:
 		fd = -(f1*f2-f3);
 		vald = *(lint *)(&fd);
+		break;
+	case Fcvtws:
+		vald = (long long)((int)a1);
+		break;
+	case Fcvtwus:
+		vald = (lint)((unsigned int)a1);
+		break;
+	case Fcvtls:
+		vald = (long long)a1;
+		break;
+	case Fcvtlus:
+		vald = (lint)a1;
+		break;
+	case Fcvtsw:
+		ad = (float)((int)v1);
+		vald = (lint)(*(unsigned int*)(&ad));
+		break;
+	case Fcvtswu:
+		ad = (float)((unsigned int)v1);
+		vald = (lint)(*(unsigned int*)(&ad));
+		break;
+	case Fcvtsl:
+		ad = (float)((long long)v1);
+		vald = (lint)(*(unsigned int*)(&ad));
+		break;
+	case Fcvtslu:
+		ad = (float)v1;
+		vald = (lint)(*(unsigned int*)(&ad));
+		break;
+	case Fmuls:
+		ad = a1*a2;
+		vald = (lint)(*(unsigned int*)(&ad));
+		break;
+	case Fdivs:
+		ad = a1/a2;
+		vald = (lint)(*(unsigned int*)(&ad));
 		break;
 	}
 }
