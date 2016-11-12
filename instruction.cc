@@ -7,6 +7,7 @@ Instruction::Instruction(unsigned int ins)
 	rd = (ins >> 7) & 31;
 	rs1 = (ins >> 15) & 31;
 	rs2 = (ins >> 20) & 31;
+	rs3 = (ins >> 27) & 31;
 	funct3 = (ins >> 12) & 7;
 	funct7 = (ins >> 25) & 127;
 	funct5 = (ins >> 27) & 31;
