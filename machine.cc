@@ -1418,6 +1418,7 @@ void Machine::MemoryAccess()
 		}
 		break;
 	}
+	if(content != NULL) delete content;
 }
 
 void Machine::WriteBack()
@@ -1447,6 +1448,7 @@ void Machine::BadCode()
 {
 	printf("It is a bad code! The machine halts!\n");
 	state = Halt;
+	PrintReg();
 }	
 
 void Machine::PrintReg()
