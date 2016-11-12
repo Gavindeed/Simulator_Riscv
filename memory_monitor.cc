@@ -52,6 +52,11 @@ Memory::Store(lint ad,int length,char*content)
 	memcpy(simumem+ad,content,length);
 	return;
 }
+void * 
+Memory::Translate(lint ad)
+{
+	return (void*)(simumem+ad);
+}
 //#endif
 
 /*

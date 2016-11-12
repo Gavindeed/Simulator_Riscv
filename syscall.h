@@ -5,6 +5,8 @@
 #define SYS_close 57
 #define SYS_fstat 80
 #define SYS_brk 214
+#define SYS_lseek 62
+
 #include "memory_monitor.h"
 #include "register_file.h"
 
