@@ -31,7 +31,7 @@ void sys_write(lint reg10, lint reg11, lint reg12, Memory *memory){
 }*/
 
 void sys_write(lint reg10, lint reg11, lint reg12, Memory *memory, RegisterFile *file){
-	printf("sys_write, position: %llx\n", reg11);
+	//printf("sys_write, position: %llx\n", reg11);
 	// we don't have fd
 	if (reg10 != 1){
 		printf("error!!! not stdout!!!\n");
@@ -49,7 +49,7 @@ void sys_write(lint reg10, lint reg11, lint reg12, Memory *memory, RegisterFile 
 
 void sys_read(lint reg10, lint reg11, lint reg12, Memory *memory, RegisterFile *file)
 {
-	printf("sys_read, position: %llx\n", reg11);
+	//printf("sys_read, position: %llx\n", reg11);
 
 	// we don't have fd
 	if (reg10 != 0)
@@ -74,7 +74,7 @@ void sys_read(lint reg10, lint reg11, lint reg12, Memory *memory, RegisterFile *
 }
 
 void sys_gettimeofday(lint reg10, Memory *memory){
-	printf("sys_gettimeofday\n");
+	//printf("sys_gettimeofday\n");
 	struct timeval t;
 	if (gettimeofday(&t, NULL) == 0){
 		memory->Store(reg10, sizeof(t), (char*)&t);
@@ -86,27 +86,27 @@ void sys_gettimeofday(lint reg10, Memory *memory){
 }
 
 void sys_fstat(lint reg10, lint reg11, Memory *memory, RegisterFile *file){
-	printf("sys_fstat\n");
+	//printf("sys_fstat\n");
 	void* location = memory->Translate(reg11);
 	int num = fstat(reg10, (struct stat *)location);
 	file->setInteger(A0, num);
 }
 
 void sys_close(lint reg10, Memory *memory, RegisterFile *file){
-	printf("sys_close\n");
+	//printf("sys_close\n");
 	int num = close(reg10);
 	file->setInteger(A0, num);
 }
 
 void sys_brk(lint reg10, Memory *memory, RegisterFile *file){
-	printf("sys_brk\n");
+	//printf("sys_brk\n");
 	void* location = memory->Translate(reg10);
 	int num = brk((void*)location);
 	file->setInteger(A0, num);
 }
 
 void sys_lseek(lint reg10, lint reg11, lint reg12, Memory *memory,RegisterFile *file){
-	printf("sys_lseek\n");
+	//printf("sys_lseek\n");
 	off_t num = lseek(reg10, reg11, reg12);
 	if (reg10 != 0)
 	{

@@ -48,6 +48,7 @@ void Machine::Run()
 		MemoryAccess();
 		WriteBack();
 		registerFile->setPC(registerFile->getPC()+4);
+		//if(verbose) printf("end ins\n");
 	}
 }
 
@@ -1029,6 +1030,7 @@ void Machine::Decode()
 
 void Machine::Execute()
 {
+	//if(verbose) printf("Execute\n");
 	if(aluFun == ANull)
 		return;
 
@@ -1361,7 +1363,7 @@ void Machine::MemoryAccess()
 	//printf("MemoryAccess\n");
 	if(memFun == MNull)
 		return;
-	void *content;
+	void *content = NULL;
 	switch(memFun)
 	{
 	case Read:
