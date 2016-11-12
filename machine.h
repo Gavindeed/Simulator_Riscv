@@ -7,7 +7,7 @@
 #include "instruction.h"
 
 enum MachineState {Running, Error, Halt};
-enum ALUFun {ANull, Add, Sub, Mul, Div, And, Or, Xor, Less, Lessu, Shl, Shrl, Shra, 
+enum ALUFun {ANull, Add, Sub, Mul, Div, And, Or, Xor, Less, Lessu, Shl, Shrl, Shra, Shlw, Shrlw, Shraw, 
 	Mulh, Mulhu, Mulhsu, Divu, Rem, Remu, Fadd, Fsub, Fmul, Fdiv, Fsqrt};
 enum ALUSrc {Rs2, Imm, Val4};
 enum MemFun {MNull, Read, MWrite};
