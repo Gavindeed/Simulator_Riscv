@@ -155,6 +155,7 @@ void Machine::Decode()
 		writeSize = WWords;
 		aluFun = ANull;
 		imm = (instruction->content & (~((1 << 12) - 1)));
+		imm = (long long)((int)((unsigned int)imm));
 		vald = imm;
 		rd = instruction->rd;
 		if(verbose) printf("lui $%s %lu\n", regTable[rd], imm);
@@ -165,6 +166,7 @@ void Machine::Decode()
 		writeSize = WWords;
 		aluFun = Add;
 		imm = (instruction->content & (~((1 << 12) - 1)));
+		imm = (long long)((int)((unsigned int)imm));
 		rd = instruction->rd;
 		aluSrc = Imm;
 		val1 = registerFile->getPC();
@@ -351,11 +353,12 @@ void Machine::Decode()
 		aluFun = Add;
 		aluSrc = Val4;
 		val1 = registerFile->getPC();
-		imm = (lint)((int)instruction->content >> 20);
+		imm = (long long)((int)instruction->content >> 20);
 		rd = instruction->rd;
 		rs1 = instruction->rs1;
 		{lint address = imm + registerFile->getInteger(instruction->rs1);
-		address = (address & (~1));
+		//address = (address & (~1));
+		address = (address >> 1 << 1);
 		registerFile->setPC(address - 4);}
 		if(verbose) printf("jalr $%s %ld\n", regTable[rs1], imm);
 		break;
@@ -483,9 +486,17 @@ void Machine::Decode()
 		writeFun = WNull;
 		aluFun = Add;
 		aluSrc = Imm;
-		imm = (lint)((int)instruction->content >> 20);
-		imm = (imm & (~((1 << 5) - 1)));
-		imm += ((instruction->content >> 7) & ((1 << 5) - 1));
+		//imm = (long long)((int)instruction->content >> 20);
+		//imm = (imm & (~((1 << 5) - 1)));
+		//imm += ((instruction->content >> 7) & ((1 << 5) - 1));
+		{
+			lint content = instruction->content;
+			imm = 0;
+			imm += ((content >> 7) & ((1 << 5) - 1));
+			imm += ((content >> 20) & ((1 << 12) - (1 << 5)));
+			imm = ((long long)imm << 52 >> 52);
+		}
+		
 		rs1 = instruction->rs1;
 		val1 = registerFile->getInteger(rs1);
 		rs2 = instruction->rs2;
@@ -523,18 +534,19 @@ void Machine::Decode()
 		val1 = registerFile->getInteger(rs1);
 		val1 = (unsigned int)val1;
 		rd = instruction->rd;
-		imm = (((int)instruction->content >> 20));
+		imm = (long long)(((int)instruction->content >> 20));
 		switch(instruction->funct3)
 		{
 		case ADDIW:
 			aluFun = Add;
+			val1 = ((long long)((int)((unsigned int)val1)));
 			if(verbose) printf("addiw $%s $%s %ld\n", regTable[rd], regTable[rs1], imm);
 			break;
 		case 1:
 			switch(instruction->funct7)
 			{
 			case SLLIW:
-				aluFun = Shl;
+				aluFun = Shlw;
 				shamt = ((instruction->content >> 20) & 31);
 				if(verbose) printf("slliw $%s $%s %lu\n", regTable[rd], regTable[rs1], shamt);
 				break;
@@ -547,12 +559,12 @@ void Machine::Decode()
 			switch(instruction->funct7)
 			{
 			case SRLIW:
-				aluFun = Shrl;
+				aluFun = Shrlw;
 				shamt = ((instruction->content >> 20) & 31);
 				if(verbose) printf("srliw $%s $%s %lu\n", regTable[rd], regTable[rs1], shamt);
 				break;
 			case SRAIW:
-				aluFun = Shra;
+				aluFun = Shraw;
 				shamt = ((instruction->content >> 20) & 31);
 				if(verbose) printf("sraiw $%s $%s %lu\n", regTable[rd], regTable[rs1], shamt);
 				break;
@@ -585,14 +597,20 @@ void Machine::Decode()
 			{
 			case ADDW:
 				aluFun = Add;
+				val1 = ((long long)((int)((unsigned int)val1)));
+				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("addw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
 				break;
 			case SUBW:
 				aluFun = Sub;
+				val1 = ((long long)((int)((unsigned int)val1)));
+				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("subw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
 				break;
 			case MULW:
 				aluFun = Mul;
+				val1 = ((long long)((int)((unsigned int)val1)));
+				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("mulw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
 				break;
 			default:
@@ -604,7 +622,7 @@ void Machine::Decode()
 			switch(instruction->funct7)
 			{
 			case SLLW:
-				aluFun = Shl;
+				aluFun = Shlw;
 				shamt = (val2 & 31);
 				if(verbose) printf("sllw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
 				break;
@@ -618,6 +636,8 @@ void Machine::Decode()
 			{
 			case DIVW:
 				aluFun = Div;
+				val1 = ((long long)((int)((unsigned int)val1)));
+				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("divw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
 				break;
 			default:
@@ -629,17 +649,19 @@ void Machine::Decode()
 			switch(instruction->funct7)
 			{
 			case SRLW:
-				aluFun = Shrl;
+				aluFun = Shrlw;
 				shamt = (val2 & 31);
 				if(verbose) printf("srlw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
 				break;
 			case SRAW:
-				aluFun = Shra;
+				aluFun = Shraw;
 				shamt = (val2 & 31);
 				if(verbose) printf("sraw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
 				break;
 			case DIVUW:
 				aluFun = Divu;
+				val1 = ((long long)((int)((unsigned int)val1)));
+				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("divuw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
 				break;
 			default:
@@ -652,6 +674,8 @@ void Machine::Decode()
 			{
 			case REMW:
 				aluFun = Rem;
+				val1 = ((long long)((int)((unsigned int)val1)));
+				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("remw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
 				break;
 			default:
@@ -684,7 +708,7 @@ void Machine::Decode()
 		rs1 = instruction->rs1;
 		val1 = registerFile->getInteger(rs1);
 		rd = instruction->rd;
-		imm = (instruction->content >> 20);
+		imm = (long long)((int)instruction->content >> 20);
 		switch(instruction->funct3)
 		{
 		case FLW:
@@ -713,6 +737,7 @@ void Machine::Decode()
 		val2 = registerFile->getFloat(rs2);
 		imm = ((instruction->content >> 7) & 31);
 		imm += ((instruction->content >> 20) & ((1 << 12) - (1 << 5)));
+		imm = ((long long)imm << 52 >> 52);
 		switch(instruction->funct3)
 		{
 		case FSW:
@@ -732,6 +757,7 @@ void Machine::Decode()
 		memFun = MNull;
 		aluSrc = Rs2;
 		writeFun = WWrite;
+		writeSize = FDouble;
 		rs1 = instruction->rs1;
 		rs2 = instruction->rs2;
 		rd = instruction->rd;
@@ -775,11 +801,11 @@ void Machine::Decode()
 			{
 			case ECALL:
 				if(verbose) printf("ecall\n");
-				{long v10 = registerFile->getInteger(10);
-				long v11 = registerFile->getInteger(11);
-				long v12 = registerFile->getInteger(12);
-				long v13 = registerFile->getInteger(13);
-				long v17 = registerFile->getInteger(17);
+				{lint v10 = registerFile->getInteger(10);
+				lint v11 = registerFile->getInteger(11);
+				lint v12 = registerFile->getInteger(12);
+				lint v13 = registerFile->getInteger(13);
+				lint v17 = registerFile->getInteger(17);
 				syscall(v10, v11, v12, v13, v17, memory, registerFile);}
 				break;
 			case EBREAK:
@@ -887,6 +913,21 @@ void Machine::Execute()
 		break;
 	case Shra:
 		vald = ((long long)v1 >> shamt);
+		break;
+	case Shlw:
+		{unsigned int s1 = v1;
+		s1 = (s1 << shamt);
+		vald = (long long)((int)s1);}
+		break;
+	case Shrlw:
+		{unsigned int s1 = v1;
+		s1 = (s1 >> shamt);
+		vald = (long long)((int)s1);}
+		break;
+	case Shraw:
+		{int s1 = (int)((unsigned int)v1);
+		s1 = (s1 >> shamt);
+		vald = (long long)s1;}
 		break;
 	case Mulh:
 		{neg = 1;
@@ -1043,6 +1084,8 @@ void Machine::MemoryAccess()
 {
 	//void *address = (void *)vald;
 	//printf("MemoryAccess\n");
+	if(memFun == MNull)
+		return;
 	void *content;
 	switch(memFun)
 	{
