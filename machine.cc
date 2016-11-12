@@ -68,6 +68,7 @@ void Machine::Fetch()
 
 void Machine::Decode()
 {
+	lint imms, immu;
 	switch(instruction->opcode)
 	{
 	case OP_IMM:
@@ -78,31 +79,38 @@ void Machine::Decode()
 		val1 = registerFile->getInteger(rs1);
 		rd = instruction->rd;
 		aluSrc = Imm;
-		imm = (long long)((int)instruction->content >> 20);
+		imms = (long long)((int)instruction->content >> 20);
+		immu = (instruction->content >> 20);
 		switch(instruction->funct3)
 		{
 		case ADDI:
 			aluFun = Add;
+			imm = imms;
 			if(verbose) printf("addi $%s $%s %ld\n", regTable[rd], regTable[rs1], imm);
 			break;
 		case SLTI:
 			aluFun = Less;
+			imm = imms;
 			if(verbose) printf("slti $%s $%s %ld\n", regTable[rd], regTable[rs1], imm);
 			break;
 		case SLTIU:
 			aluFun = Lessu;
+			imm = immu;
 			if(verbose) printf("sltiu $%s $%s %lu\n", regTable[rd], regTable[rs1], imm);
 			break;
 		case ANDI:
 			aluFun = And;
+			imm = immu;
 			if(verbose) printf("andi $%s $%s %lu\n", regTable[rd], regTable[rs1], imm);
 			break;
 		case ORI:
 			aluFun = Or;
+			imm = immu;
 			if(verbose) printf("ori $%s $%s %lu\n", regTable[rd], regTable[rs1], imm);
 			break;
 		case XORI:
 			aluFun = Xor;
+			imm = immu;
 			if(verbose) printf("xori $%s $%s %lu\n", regTable[rd], regTable[rs1], imm);
 			break;
 		case 1:
@@ -772,7 +780,7 @@ void Machine::Decode()
 				long v12 = registerFile->getInteger(12);
 				long v13 = registerFile->getInteger(13);
 				long v17 = registerFile->getInteger(17);
-				syscall(v10, v11, v12, v13, v17, memory);}
+				syscall(v10, v11, v12, v13, v17, memory, registerFile);}
 				break;
 			case EBREAK:
 				if(verbose) printf("ebreak\n");

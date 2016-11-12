@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include "syscall.h"
 #include "memory_monitor.h"
+#include "alias.h"
+#include "register_file.h"
 //need include h file of load and store
 
 void sys_exit(){
