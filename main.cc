@@ -10,9 +10,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	Machine *machine = new Machine(argv[1]);
-	//machine->SetVerbose();
-	//machine->SetDebug();
-	machine->SetEvaluate();
+	//machine->SetVerbose(true);
+	machine->SetDebug(true);
+	machine->SetEvaluate(true);
 	machine->Run();
 	printf("Run over!\n");
 	return 0;

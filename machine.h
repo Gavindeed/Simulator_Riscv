@@ -32,9 +32,9 @@ public:
 	void Execute();
 	void MemoryAccess();
 	void WriteBack();
-	void SetVerbose() {verbose = true;}
-	void SetDebug() {debug = true;}
-	void SetEvaluate() {evaluate = true;}
+	void SetVerbose(bool b) {verbose = b;}
+	void SetDebug(bool b) {debug = b;}
+	void SetEvaluate(bool b) {evaluate = b;}
 	void PrintReg();
 	void addIns(char *ins);
 	void Evaluate();

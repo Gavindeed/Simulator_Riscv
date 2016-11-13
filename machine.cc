@@ -1704,4 +1704,19 @@ void Machine::PrintReg()
 		}
 	}
 	printf("$%s: %lx\n", "pc", registerFile->getPC());
+	printf("Please click enter to continue:\n");
+	char c;
+	scanf("%c", &c);
+	if(c == 'r')
+	{
+		debug = false;
+	}
+	else if(c == 'q')
+	{
+		state = Halt;
+	}
+	else if(c == 'n')
+	{
+		
+	}
 }
