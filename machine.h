@@ -5,6 +5,8 @@
 #include "memory_monitor.h"
 #include "param.h"
 #include "instruction.h"
+#include <string>
+#include <map>
 
 enum MachineState {Running, Error, Halt};
 enum ALUFun {ANull, Add, Sub, Mul, Div, And, Or, Xor, Less, Lessu, Shl, Shrl, Shra, Shlw, Shrlw, Shraw, 
@@ -32,7 +34,10 @@ public:
 	void WriteBack();
 	void SetVerbose() {verbose = true;}
 	void SetDebug() {debug = true;}
+	void SetEvaluate() {evaluate = true;}
 	void PrintReg();
+	void addIns(char *ins);
+	void Evaluate();
 	
 private:
 	RegisterFile *registerFile;
@@ -55,6 +60,10 @@ private:
 
 	bool verbose;
 	bool debug;
+	bool evaluate;
+	unsigned int sumIns;
+
+	std::map<std::string, unsigned int> mp;
 
 	void BadCode();
 };

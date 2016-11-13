@@ -12,6 +12,7 @@ int main(int argc, char **argv)
 	Machine *machine = new Machine(argv[1]);
 	//machine->SetVerbose();
 	//machine->SetDebug();
+	machine->SetEvaluate();
 	machine->Run();
 	printf("Run over!\n");
 	return 0;

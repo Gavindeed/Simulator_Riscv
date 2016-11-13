@@ -9,5 +9,6 @@
 
 #include "memory_monitor.h"
 #include "register_file.h"
+#include "machine.h"
 
-extern void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, Memory *memory, RegisterFile *file);
+extern void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, Memory *memory, RegisterFile *file, Machine *machine);

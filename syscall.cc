@@ -8,11 +8,13 @@
 #include "memory_monitor.h"
 #include "alias.h"
 #include "register_file.h"
+#include "machine.h"
 #include <string.h>
 //need include h file of load and store
 
-void sys_exit(){
+void sys_exit(Machine *machine){
 	printf("the program has exited successfully\n");
+	machine->Evaluate();
 	exit(0);
 }
 
@@ -116,11 +118,11 @@ void sys_lseek(lint reg10, lint reg11, lint reg12, Memory *memory,RegisterFile *
 	file->setInteger(A0, num);
 }
 
-void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, Memory *memory, RegisterFile *file)
+void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, Memory *memory, RegisterFile *file, Machine *machine)
 {
 	switch(reg17){
 	case SYS_exit:
-		sys_exit();
+		sys_exit(machine);
 		break;
 	case SYS_read:
 		sys_read(reg10, reg11, reg12, memory, file);

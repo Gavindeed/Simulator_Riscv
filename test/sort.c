@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 void sort(int *begin, int *end)
 {
@@ -29,19 +28,26 @@ void sort(int *begin, int *end)
 
 int main(int argc, char **argv)
 {
-	int num = 100000;
+	int num = 10;
 	//clock_t start, finish;
-	int *A = malloc(num*sizeof(int));
-	for(int i = 0; i < num; i++)
+	int A[] = {3, 5, 1, 3, 7, 4, 3, 7, 8, 1};
+	int i = 0;
+	printf("A[] = {%d", A[0]);
+	for(i = 1; i < num; i++)
 	{
-		//scanf("%d", A+i);
-		A[i] = num - i;
+		printf(", %d", A[i]);
 	}
+	printf("}\n");
 	//start = clock();
 	sort(A, A+num);
+	printf("A[] = {%d", A[0]);
+	for(i = 1; i < num; i++)
+	{
+		printf(", %d", A[i]);
+	}
+	printf("}\n");
 	//finish = clock();
 	//double duration = (double)(finish - start) / CLOCKS_PER_SEC;
 	//printf("Duration: %lf ms\n", duration*1000);
-	free(A);
 	return 0;
 }

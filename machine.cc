@@ -3,6 +3,8 @@
 #include "syscall.h"
 //#include "param.h"
 #include <stdio.h>
+#include <map>
+#include <string>
 
 char *regTable[32] = {"zr", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0",
 	 "s1", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5",
@@ -12,6 +14,29 @@ char *floatTable[32] = {"ft0", "ft1", "ft2", "ft3", "ft4", "ft5", "ft6", "ft7",
 	"fs0", "fs1", "fa0", "fa1", "fa2", "fa3", "fa4", "fa5", "fa6", "fa7", "fs2", 
 	"fs3", "fs4", "fs5", "fs6", "fs7", "fs8", "fs9", "fs10", "fs11", "ft8",
 	"ft9", "ft10", "ft11"};
+
+
+
+void Machine::addIns(char *name)
+{
+	std::string n = name;
+	mp[n] ++;
+}
+
+void Machine::Evaluate()
+{
+	if(evaluate)
+	{
+		printf("Total instruction number: %d\nThe instructions that used in this program are listed below:\n", sumIns);
+		printf("Ins\tNum\tProp\n");
+		std::map<std::string, unsigned int>::iterator it;
+		for(it = mp.begin(); it != mp.end(); it ++)
+		{
+			printf("%s:\t%d\t%.2lf%%\n", (it->first).c_str(), it->second, (double)(it->second) / sumIns * 100);
+		}
+
+	}
+}
 
 
 Machine::Machine(char *filename)
@@ -26,6 +51,9 @@ Machine::Machine(char *filename)
 	state = Running;
 	verbose = false;
 	debug = false;
+	evaluate = false;
+	sumIns = 0;
+	mp.clear();
 }
 
 Machine::~Machine()
@@ -51,6 +79,7 @@ void Machine::Run()
 		MemoryAccess();
 		WriteBack();
 		registerFile->setPC(registerFile->getPC()+4);
+		sumIns ++;
 		//if(verbose) printf("end ins\n");
 	}
 }
@@ -91,31 +120,37 @@ void Machine::Decode()
 			aluFun = Add;
 			imm = imms;
 			if(verbose) printf("addi $%s $%s %ld\n", regTable[rd], regTable[rs1], imm);
+			addIns("addi");
 			break;
 		case SLTI:
 			aluFun = Less;
 			imm = imms;
 			if(verbose) printf("slti $%s $%s %ld\n", regTable[rd], regTable[rs1], imm);
+			addIns("slti");
 			break;
 		case SLTIU:
 			aluFun = Lessu;
 			imm = immu;
 			if(verbose) printf("sltiu $%s $%s %lu\n", regTable[rd], regTable[rs1], imm);
+			addIns("sltiu");
 			break;
 		case ANDI:
 			aluFun = And;
 			imm = immu;
 			if(verbose) printf("andi $%s $%s %lu\n", regTable[rd], regTable[rs1], imm);
+			addIns("andi");
 			break;
 		case ORI:
 			aluFun = Or;
 			imm = immu;
 			if(verbose) printf("ori $%s $%s %lu\n", regTable[rd], regTable[rs1], imm);
+			addIns("ori");
 			break;
 		case XORI:
 			aluFun = Xor;
 			imm = immu;
 			if(verbose) printf("xori $%s $%s %lu\n", regTable[rd], regTable[rs1], imm);
+			addIns("xori");
 			break;
 		case 1:
 			switch(((instruction->content) >> 26))
@@ -124,6 +159,7 @@ void Machine::Decode()
 				aluFun = Shl;
 				shamt = (((instruction->content) >> 20) & 63);
 				if(verbose) printf("slli $%s $%s %u\n", regTable[rd], regTable[rs1], shamt);
+				addIns("slli");
 				break;
 			default:
 				BadCode();
@@ -137,11 +173,13 @@ void Machine::Decode()
 				aluFun = Shrl;
 				shamt = (((instruction->content) >> 20) & 63);
 				if(verbose) printf("srli $%s $%s %u\n", regTable[rd], regTable[rs1], shamt);
+				addIns("srli");
 				break;
 			case SRAI:
 				aluFun = Shra;
 				shamt = (((instruction->content) >> 20) & 63);
 				if(verbose) printf("srai $%s $%s %u\n", regTable[rd], regTable[rs1], shamt);
+				addIns("srai");
 				break;
 			default:
 				BadCode();
@@ -163,6 +201,7 @@ void Machine::Decode()
 		vald = imm;
 		rd = instruction->rd;
 		if(verbose) printf("lui $%s %lu\n", regTable[rd], imm);
+		addIns("lui");
 		break;
 	case AUIPC:
 		memFun = MNull;
@@ -175,6 +214,7 @@ void Machine::Decode()
 		aluSrc = Imm;
 		val1 = registerFile->getPC();
 		if(verbose) printf("auipc $%s %lu\n", regTable[rd], imm);
+		addIns("aupic");
 		break;
 	case OP:
 		memFun = MNull;
@@ -194,14 +234,17 @@ void Machine::Decode()
 			case ADD:
 				aluFun = Add;
 				if(verbose) printf("add $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("add");
 				break;
 			case SUB:
 				aluFun = Sub;
 				if(verbose) printf("sub $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("sub");
 				break;
 			case MUL:
 				aluFun = Mul;
 				if(verbose) printf("mul $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("mul");
 				break;
 			default:
 				BadCode();
@@ -215,10 +258,12 @@ void Machine::Decode()
 				aluFun = Shl;
 				shamt = (val2 & 63);
 				if(verbose) printf("sll $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("sll");
 				break;
 			case MULH:
 				aluFun = Mulh;
 				if(verbose) printf("mulh $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("mulh");
 				break;
 			default:
 				BadCode();
@@ -231,10 +276,12 @@ void Machine::Decode()
 			case SLT:
 				aluFun = Less;
 				if(verbose) printf("slt $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("slt");
 				break;
 			case MULHSU:
 				aluFun = Mulhsu;
 				if(verbose) printf("mulhsu $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("mulhsu");
 				break;
 			default:
 				BadCode();
@@ -247,10 +294,12 @@ void Machine::Decode()
 			case SLTU:
 				aluFun = Lessu;
 				if(verbose) printf("sltu $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("sltu");
 				break;
 			case MULHU:
 				aluFun = Mulhu;
 				if(verbose) printf("mulhu $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("mulhu");
 				break;
 			default:
 				BadCode();
@@ -263,10 +312,12 @@ void Machine::Decode()
 			case XOR:
 				aluFun = Xor;
 				if(verbose) printf("xor $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("xor");
 				break;
 			case DIV:
 				aluFun = Div;
 				if(verbose) printf("div $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("div");
 				break;
 			default:
 				BadCode();
@@ -280,15 +331,18 @@ void Machine::Decode()
 				aluFun = Shrl;
 				shamt = (val2 & 63);
 				if(verbose) printf("srl $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("srl");
 				break;
 			case SRA:
 				aluFun = Shra;
 				shamt = (val2 & 63);
 				if(verbose) printf("sra $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("sra");
 				break;
 			case DIVU:
 				aluFun = Divu;
 				if(verbose) printf("divu $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("divu");
 				break;
 			default:
 				BadCode();
@@ -301,10 +355,12 @@ void Machine::Decode()
 			case AND:
 				aluFun = And;
 				if(verbose) printf("and $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("and");
 				break;
 			case REMU:
 				aluFun = Remu;
 				if(verbose) printf("remu $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("remu");
 				break;
 			default:
 				BadCode();
@@ -317,10 +373,12 @@ void Machine::Decode()
 			case OR:
 				aluFun = Or;
 				if(verbose) printf("or $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("or");
 				break;
 			case REM:
 				aluFun = Rem;
 				if(verbose) printf("rem $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("rem");
 				break;
 			default:
 				BadCode();
@@ -349,6 +407,7 @@ void Machine::Decode()
 		rd = instruction->rd;
 		registerFile->setPC(val1 + imm - 4);
 		if(verbose) printf("jal %ld $%s\n", imm, regTable[rd]);
+		addIns("jal");
 		break;
 	case JALR:
 		memFun = MNull;
@@ -365,6 +424,7 @@ void Machine::Decode()
 		address = (address >> 1 << 1);
 		registerFile->setPC(address - 4);}
 		if(verbose) printf("jalr $%s %ld\n", regTable[rs1], imm);
+		addIns("jalr");
 		break;
 	case BRANCH:
 		memFun = MNull;
@@ -390,6 +450,7 @@ void Machine::Decode()
 				registerFile->setPC(imm + nowPC - 4);
 			}
 			if(verbose) printf("beq $%s $%s %ld\n", regTable[rs1], regTable[rs2], imm);
+			addIns("beq");
 			break;
 		case BNE:
 			if(val1 != val2)
@@ -397,6 +458,7 @@ void Machine::Decode()
 				registerFile->setPC(imm + nowPC - 4);
 			}
 			if(verbose) printf("bne $%s $%s %ld\n", regTable[rs1], regTable[rs2], imm);
+			addIns("bne");
 			break;
 		case BLT:
 			if((long long)val1 < (long long)val2)
@@ -404,6 +466,7 @@ void Machine::Decode()
 				registerFile->setPC(imm + nowPC - 4);
 			}
 			if(verbose) printf("blt $%s $%s %ld\n", regTable[rs1], regTable[rs2], imm);
+			addIns("blt");
 			break;
 		case BLTU:
 			if(val1 < val2)
@@ -412,6 +475,7 @@ void Machine::Decode()
 				registerFile->setPC(imm + nowPC - 4);
 			}
 			if(verbose) printf("bltu $%s $%s %ld\n", regTable[rs1], regTable[rs2], imm);
+			addIns("bltu");
 			break;
 		case BGE:
 			if((long long)val1 >= (long long)val2)
@@ -419,6 +483,7 @@ void Machine::Decode()
 				registerFile->setPC(imm + nowPC - 4);
 			}
 			if(verbose) printf("bge $%s $%s %ld\n", regTable[rs1], regTable[rs2], imm);
+			addIns("bge");
 			break;
 		case BGEU:
 			if(val1 >= val2)
@@ -426,6 +491,7 @@ void Machine::Decode()
 				registerFile->setPC(imm + nowPC - 4);
 			}
 			if(verbose) printf("bgeu $%s $%s %ld\n", regTable[rs1], regTable[rs2], imm);
+			addIns("bgeu");
 			break;
 		default:
 			BadCode();
@@ -449,36 +515,43 @@ void Machine::Decode()
 			memSize = MWords;
 			writeSize = WWords;
 			if(verbose) printf("lw $%s %ld($%s)\n", regTable[rd], imm, regTable[rs1]);
+			addIns("lw");
 			break;
 		case LH:
 			memSize = MHalfWords;
 			writeSize = WHalfWords;
 			if(verbose) printf("lh $%s %ld($%s)\n", regTable[rd], imm, regTable[rs1]);
+			addIns("lh");
 			break;
 		case LB:
 			memSize = MBytes;
 			writeSize = WBytes;
 			if(verbose) printf("lb $%s %ld($%s)\n", regTable[rd], imm, regTable[rs1]);
+			addIns("lb");
 			break;
 		case LD:
 			memSize = MDouble;
 			writeSize = WDouble;
 			if(verbose) printf("ld $%s %ld($%s)\n", regTable[rd], imm, regTable[rs1]);
+			addIns("ld");
 			break;
 		case LWU:
 			memSize = MWordsu;
 			writeSize = WWords;
 			if(verbose) printf("lwu $%s %ld($%s)\n", regTable[rd], imm, regTable[rs1]);
+			addIns("lwu");
 			break;
 		case LHU:
 			memSize = MHalfWordsu;
 			writeSize = WHalfWords;
 			if(verbose) printf("lhu $%s %ld($%s)\n", regTable[rd], imm, regTable[rs1]);
+			addIns("lhu");
 			break;
 		case LBU:
 			memSize = MBytesu;
 			writeSize = WBytes;
 			if(verbose) printf("lbu $%s %ld($%s)\n", regTable[rd], imm, regTable[rs1]);
+			addIns("lbu");
 			break;
 		default:
 			BadCode();
@@ -511,18 +584,22 @@ void Machine::Decode()
 		case SW:
 			memSize = MWords;
 			if(verbose) printf("sw $%s %ld($%s)\n", regTable[rs2], imm, regTable[rs1]);
+			addIns("sw");
 			break;
 		case SH:
 			memSize = MHalfWords;
 			if(verbose) printf("sh $%s %ld($%s)\n", regTable[rs2], imm, regTable[rs1]);
+			addIns("sh");
 			break;
 		case SB:
 			memSize = MBytes;
 			if(verbose) printf("sb $%s %ld($%s)\n", regTable[rs2], imm, regTable[rs1]);
+			addIns("sb");
 			break;
 		case SD:
 			memSize = MDouble;
 			if(verbose) printf("sd $%s %ld($%s)\n", regTable[rs2], imm, regTable[rs1]);
+			addIns("sd");
 			break;
 		default:
 			BadCode();
@@ -545,6 +622,7 @@ void Machine::Decode()
 			aluFun = Add;
 			val1 = ((long long)((int)((unsigned int)val1)));
 			if(verbose) printf("addiw $%s $%s %ld\n", regTable[rd], regTable[rs1], imm);
+			addIns("addiw");
 			break;
 		case 1:
 			switch(instruction->funct7)
@@ -553,6 +631,7 @@ void Machine::Decode()
 				aluFun = Shlw;
 				shamt = ((instruction->content >> 20) & 31);
 				if(verbose) printf("slliw $%s $%s %lu\n", regTable[rd], regTable[rs1], shamt);
+				addIns("slliw");
 				break;
 			default:
 				BadCode();
@@ -566,11 +645,13 @@ void Machine::Decode()
 				aluFun = Shrlw;
 				shamt = ((instruction->content >> 20) & 31);
 				if(verbose) printf("srliw $%s $%s %lu\n", regTable[rd], regTable[rs1], shamt);
+				addIns("srliw");
 				break;
 			case SRAIW:
 				aluFun = Shraw;
 				shamt = ((instruction->content >> 20) & 31);
 				if(verbose) printf("sraiw $%s $%s %lu\n", regTable[rd], regTable[rs1], shamt);
+				addIns("sraiw");
 				break;
 			default:
 				BadCode();
@@ -604,18 +685,21 @@ void Machine::Decode()
 				val1 = ((long long)((int)((unsigned int)val1)));
 				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("addw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("addw");
 				break;
 			case SUBW:
 				aluFun = Sub;
 				val1 = ((long long)((int)((unsigned int)val1)));
 				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("subw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("subw");
 				break;
 			case MULW:
 				aluFun = Mul;
 				val1 = ((long long)((int)((unsigned int)val1)));
 				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("mulw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("mulw");
 				break;
 			default:
 				BadCode();
@@ -629,6 +713,7 @@ void Machine::Decode()
 				aluFun = Shlw;
 				shamt = (val2 & 31);
 				if(verbose) printf("sllw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("sllw");
 				break;
 			default:
 				BadCode();
@@ -643,6 +728,7 @@ void Machine::Decode()
 				val1 = ((long long)((int)((unsigned int)val1)));
 				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("divw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("divw");
 				break;
 			default:
 				BadCode();
@@ -656,17 +742,20 @@ void Machine::Decode()
 				aluFun = Shrlw;
 				shamt = (val2 & 31);
 				if(verbose) printf("srlw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("srlw");
 				break;
 			case SRAW:
 				aluFun = Shraw;
 				shamt = (val2 & 31);
 				if(verbose) printf("sraw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("sraw");
 				break;
 			case DIVUW:
 				aluFun = Divu;
 				val1 = ((long long)((int)((unsigned int)val1)));
 				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("divuw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("divuw");
 				break;
 			default:
 				BadCode();
@@ -681,6 +770,7 @@ void Machine::Decode()
 				val1 = ((long long)((int)((unsigned int)val1)));
 				val2 = ((long long)((int)((unsigned int)val2)));
 				if(verbose) printf("remw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("remw");
 				break;
 			default:
 				BadCode();
@@ -693,6 +783,7 @@ void Machine::Decode()
 			case REMUW:
 				aluFun = Remu;
 				if(verbose) printf("remuw $%s $%s $%s\n", regTable[rd], regTable[rs1], regTable[rs2]);
+				addIns("remuw");
 				break;
 			default:
 				BadCode();
@@ -719,11 +810,13 @@ void Machine::Decode()
 			memSize = MWords;
 			writeSize = FWords;
 			if(verbose) printf("flw $%s %ld($%s)\n", floatTable[rd], imm, regTable[rs1]);
+			addIns("flw");
 			break;
 		case FLD:
 			memSize = MDouble;
 			writeSize = FDouble;
 			if(verbose) printf("fld $%s %ld($%s)\n", floatTable[rd], imm, regTable[rs1]);
+			addIns("fld");
 			break;
 		default:
 			BadCode();
@@ -747,10 +840,12 @@ void Machine::Decode()
 		case FSW:
 			memSize = MWords;
 			if(verbose) printf("fsw $%s %ld($%s)\n", floatTable[rs2], imm, regTable[rs1]);
+			addIns("fsw");
 			break;
 		case FSD:
 			memSize = MDouble;
 			if(verbose) printf("fsd $%s %ld($%s)\n", floatTable[rs2], imm, regTable[rs1]);
+			addIns("fsd");
 			break;
 		default:
 			BadCode();
@@ -772,30 +867,37 @@ void Machine::Decode()
 		case FADD_D:
 			aluFun = Fadd;
 			if(verbose) printf("fadd.d $%s $%s $%s\n", floatTable[rd], floatTable[rs1], regTable[rs2]);
+			addIns("fadd.d");
 			break;
 		case FSUB_D:
 			aluFun = Fsub;
 			if(verbose) printf("fsub.d $%s $%s $%s\n", floatTable[rd], floatTable[rs1], regTable[rs2]);
+			addIns("fsub.d");
 			break;
 		case FMUL_D:
 			aluFun = Fmul;
 			if(verbose) printf("fmul.d $%s $%s $%s\n", floatTable[rd], floatTable[rs1], regTable[rs2]);
+			addIns("fmul.d");
 			break;
 		case FDIV_D:
 			aluFun = Fdiv;
 			if(verbose) printf("fdiv.d $%s $%s $%s\n", floatTable[rd], floatTable[rs1], regTable[rs2]);
+			addIns("fdiv.d");
 			break;
 		case FSQRT_D:
 			aluFun = Fsqrt;
 			if(verbose) printf("fsqrt.d $%s $%s\n", floatTable[rd], floatTable[rs1]);
+			addIns("fsqrt.d");
 			break;
 		case FMUL_S:
 			aluFun = Fmuls;
 			if(verbose) printf("fmul.s $%s $%s $%s\n", floatTable[rd], floatTable[rs1], regTable[rs2]);
+			addIns("fmul.s");
 			break;
 		case FDIV_S:
 			aluFun = Fdivs;
 			if(verbose) printf("fdiv.s $%s $%s $%s\n", floatTable[rd], floatTable[rs1], regTable[rs2]);
+			addIns("fdiv.s");
 			break;
 		case 96:
 			switch(instruction->rs2)
@@ -804,21 +906,25 @@ void Machine::Decode()
 				aluFun = Fcvtws;
 				writeSize = WWords;
 				if(verbose) printf("fcvt.w.s $%s $%s\n", regTable[rd], floatTable[rs1]);
+				addIns("fcvt.w.s");
 				break;
 			case 1:
 				aluFun = Fcvtwus;
 				writeSize = WWords;
 				if(verbose) printf("fcvt.wu.s $%s $%s\n", regTable[rd], floatTable[rs1]);
+				addIns("fcvt.wu.s");
 				break;
 			case 2:
 				aluFun = Fcvtls;
 				writeSize = WDouble;
 				if(verbose) printf("fcvt.l.s $%s $%s\n", regTable[rd], floatTable[rs1]);
+				addIns("fcvt.l.s");
 				break;
 			case 3:
 				aluFun = Fcvtlus;
 				writeSize = WDouble;
 				if(verbose) printf("fcvt.lu.s $%s $%s\n", regTable[rd], floatTable[rs1]);
+				addIns("fcvt.lu.s");
 				break;
 			default:
 				BadCode();
@@ -832,21 +938,25 @@ void Machine::Decode()
 				aluFun = Fcvtwd;
 				writeSize = WDouble;
 				if(verbose) printf("fcvt.w.d $%s $%s\n", regTable[rd], floatTable[rs1]);
+				addIns("fcvt.w.d");
 				break;
 			case 1:
 				aluFun = Fcvtwud;
 				writeSize = WDouble;
 				if(verbose) printf("fcvt.wu.d $%s $%s\n", regTable[rd], floatTable[rs1]);
+				addIns("fcvt.wu.d");
 				break;
 			case 2:
 				aluFun = Fcvtld;
 				writeSize = WDouble;
 				if(verbose) printf("fcvt.l.d $%s $%s\n", regTable[rd], floatTable[rs1]);
+				addIns("fcvt.l.d");
 				break;
 			case 3:
 				aluFun = Fcvtlud;
 				writeSize = WDouble;
 				if(verbose) printf("fcvt.lu.d $%s $%s\n", regTable[rd], floatTable[rs1]);
+				addIns("fcvt.lu.d");
 				break;
 			default:
 				BadCode();
@@ -861,22 +971,26 @@ void Machine::Decode()
 				val1 = registerFile->getInteger(rs1);
 				val1 = (long long)((int)((unsigned int)val1));
 				if(verbose) printf("fcvt.s.w $%s $%s\n", floatTable[rd], regTable[rs1]);
+				addIns("fcvt.s.w");
 				break;
 			case 1:
 				aluFun = Fcvtswu;
 				val1 = registerFile->getInteger(rs1);
 				val1 = (unsigned int)val1;
 				if(verbose) printf("fcvt.s.wu $%s $%s\n", floatTable[rd], regTable[rs1]);
+				addIns("fcvt.s.wu");
 				break;
 			case 2:
 				aluFun = Fcvtsl;
 				val1 = registerFile->getInteger(rs1);
 				if(verbose) printf("fcvt.s.l $%s $%s\n", floatTable[rd], regTable[rs1]);
+				addIns("fcvt.s.l");
 				break;
 			case 3:
 				aluFun = Fcvtslu;
 				val1 = registerFile->getInteger(rs1);
 				if(verbose) printf("fcvt.s.lu $%s $%s\n", floatTable[rd], regTable[rs1]);
+				addIns("fcvt.s.lu");
 				break;
 			default:
 				BadCode();
@@ -891,22 +1005,26 @@ void Machine::Decode()
 				val1 = registerFile->getInteger(rs1);
 				val1 = (long long)((int)((unsigned int)val1));
 				if(verbose) printf("fcvt.d.w $%s $%s\n", floatTable[rd], regTable[rs1]);
+				addIns("fcvt.d.w");
 				break;
 			case 1:
 				aluFun = Fcvtdwu;
 				val1 = registerFile->getInteger(rs1);
 				val1 = (unsigned int)val1;
 				if(verbose) printf("fcvt.d.wu $%s $%s\n", floatTable[rd], regTable[rs1]);
+				addIns("fcvt.d.wu");
 				break;
 			case 2:
 				aluFun = Fcvtdl;
 				val1 = registerFile->getInteger(rs1);
 				if(verbose) printf("fcvt.d.l $%s $%s\n", floatTable[rd], regTable[rs1]);
+				addIns("fcvt.d.l");
 				break;
 			case 3:
 				aluFun = Fcvtdlu;
 				val1 = registerFile->getInteger(rs1);
-				if(verbose) printf("fcvt.d.l $%s $%s\n", floatTable[rd], regTable[rs1]);
+				if(verbose) printf("fcvt.d.lu $%s $%s\n", floatTable[rd], regTable[rs1]);
+				addIns("fcvt.d.lu");
 				break;
 			default:
 				BadCode();
@@ -918,19 +1036,23 @@ void Machine::Decode()
 			vald = val1;
 			writeSize = WDouble;
 			if(verbose) printf("fmv.x.d $%s $%s\n", regTable[rd], floatTable[rs1]);
+			addIns("fmv.x.d");
 			break;
 		case FMV_D_X:
 			aluFun = ANull;
 			vald = registerFile->getInteger(rs1);
 			if(verbose) printf("fmv.d.x $%s $%s\n", floatTable[rd], regTable[rs1]);
+			addIns("fmv.d.x");
 			break;
 		case FCVT_S_D:
 			aluFun = Fcvtsd;
 			if(verbose) printf("fcvt.s.d $%s $%s\n", floatTable[rd], floatTable[rs1]);
+			addIns("fcvt.s.d");
 			break;
 		case FCVT_D_S:
 			aluFun = Fcvtds;
 			if(verbose) printf("fcvt.d.s $%s $%s\n", floatTable[rd], floatTable[rs1]);
+			addIns("fcvt.d.s");
 			break;
 		case 17:
 			switch(instruction->funct3)
@@ -938,14 +1060,17 @@ void Machine::Decode()
 			case 0:
 				aluFun = Fsgnjd;
 				if(verbose) printf("fsgnj.d $%s $%s $%s\n", floatTable[rd], floatTable[rs1], floatTable[rs2]);
+				addIns("fsgnj.d");
 				break;
 			case 1:
 				aluFun = Fsgnjnd;
 				if(verbose) printf("fsgnjn.d $%s $%s $%s\n", floatTable[rd], floatTable[rs1], floatTable[rs2]);
+				addIns("fsgnjn.d");
 				break;
 			case 2:
 				aluFun = Fsgnjxd;
 				if(verbose) printf("fsgnjx.d $%s $%s $%s\n", floatTable[rd], floatTable[rs1], floatTable[rs2]);
+				addIns("fsgnjx.d");
 				break;
 			default:
 				BadCode();
@@ -959,16 +1084,19 @@ void Machine::Decode()
 				aluFun = Feqd;
 				writeSize = WDouble;
 				if(verbose) printf("feq.d $%s $%s $%s\n", regTable[rd], floatTable[rs1], floatTable[rs2]);
+				addIns("feq.d");
 				break;
 			case 1:
 				aluFun = Fltd;
 				writeSize = WDouble;
 				if(verbose) printf("flt.d $%s $%s $%s\n", regTable[rd], floatTable[rs1], floatTable[rs2]);
+				addIns("flt.d");
 				break;
 			case 0:
 				aluFun = Fled;
 				writeSize = WDouble;
 				if(verbose) printf("fle.d $%s $%s $%s\n", regTable[rd], floatTable[rs1], floatTable[rs2]);
+				addIns("fle.d");
 				break;
 			default:
 				BadCode();
@@ -994,6 +1122,7 @@ void Machine::Decode()
 		case 1:
 			aluFun = Fmaddd;
 			if(verbose) printf("fmadd.d $%s $%s $%s\n", regTable[rd], floatTable[rs1], floatTable[rs2]);
+			addIns("fmadd.d");
 			break;
 		default:
 			BadCode();
@@ -1014,6 +1143,7 @@ void Machine::Decode()
 		case 1:
 			aluFun = Fmsubd;
 			if(verbose) printf("fmsub.d $%s $%s $%s\n", regTable[rd], floatTable[rs1], floatTable[rs2]);
+			addIns("fmsub.d");
 			break;
 		default:
 			BadCode();
@@ -1034,6 +1164,7 @@ void Machine::Decode()
 		case 1:
 			aluFun = Fnmaddd;
 			if(verbose) printf("nfmadd.d $%s $%s $%s\n", regTable[rd], floatTable[rs1], floatTable[rs2]);
+			addIns("nfmadd.d");
 			break;
 		default:
 			BadCode();
@@ -1053,7 +1184,8 @@ void Machine::Decode()
 		{
 		case 1:
 			aluFun = Fnmsubd;
-			if(verbose) printf("nfsub.d $%s $%s $%s\n", regTable[rd], floatTable[rs1], floatTable[rs2]);
+			if(verbose) printf("nfmsub.d $%s $%s $%s\n", regTable[rd], floatTable[rs1], floatTable[rs2]);
+			addIns("nfmsub.d");
 			break;
 		default:
 			BadCode();
@@ -1076,10 +1208,12 @@ void Machine::Decode()
 				lint v12 = registerFile->getInteger(12);
 				lint v13 = registerFile->getInteger(13);
 				lint v17 = registerFile->getInteger(17);
-				syscall(v10, v11, v12, v13, v17, memory, registerFile);}
+				syscall(v10, v11, v12, v13, v17, memory, registerFile, this);}
+				addIns("ecall");
 				break;
 			case EBREAK:
 				if(verbose) printf("ebreak\n");
+				addIns("ebreak");
 				break;
 			default:
 				BadCode();
