@@ -38,7 +38,7 @@ void Memory::HandleRequest(uint64_t addr, int bytes, int read,
   time = latency_.hit_latency + latency_.bus_latency;
   stats_.access_time += time;
   //#ifdef SIMULATE
-  printf("memory addr: %llx\n", addr);
+  //printf("memory addr: %llx\n", addr);
   if(read==1)
   {
   	memcpy(content,simumem+addr,bytes);
