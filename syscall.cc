@@ -41,8 +41,9 @@ void sys_write(lint reg10, lint reg11, lint reg12, Memory *memory, RegisterFile 
 	}
 	else{
 		// need load function from Jingyue Gao
-		void* location = memory->Translate(reg11); 
+		//void* location = memory->Translate(reg11); 
 		//write((int)reg10, location, 1);
+		void* location = memory->Load(reg11, reg12);
 		int writeNum = write((int)reg10, (char *)location, (int)reg12);
 		file->setInteger(A0, writeNum);
 	}
@@ -86,7 +87,7 @@ void sys_gettimeofday(lint reg10, Memory *memory){
 		exit(0);
 	}
 }
-
+/*
 void sys_fstat(lint reg10, lint reg11, Memory *memory, RegisterFile *file){
 	//printf("sys_fstat\n");
 	void* location = memory->Translate(reg11);
@@ -116,7 +117,7 @@ void sys_lseek(lint reg10, lint reg11, lint reg12, Memory *memory,RegisterFile *
 		exit(0);
 	}
 	file->setInteger(A0, num);
-}
+}*/
 
 void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, Memory *memory, RegisterFile *file, Machine *machine)
 {
