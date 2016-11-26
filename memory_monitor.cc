@@ -35,8 +35,10 @@ MemoryMonitor::MemoryMonitor(char* filename)
 	*/
 
 	memory = new Memory(filename);
-	llc = new Cache((1<<23), (1<<14), 8, 0, 1, memory);
-	l2 = new Cache((1<<18), (1<<9), 8, 0, 1, llc);
+	//llc = new Cache((1<<23), (1<<14), 8, 0, 1, memory);
+	//l2 = new Cache((1<<18), (1<<9), 8, 0, 1, llc);
+	llc = new Cache(256, 1, 16, 0, 1, memory);
+	l2 = new Cache(256, 1, 16, 0, 1, llc);
 	l1 = new Cache(256, 1, 16, 1, 0, memory);
 	//l1 = new Cache((1<<15), (1<<6), 8, 0, 1, memory);
 	entry = memory->entry;

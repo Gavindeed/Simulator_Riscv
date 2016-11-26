@@ -66,109 +66,136 @@ Cache::~Cache(){
     delete cache_addr;
 }
 
-void Cache::HandleRequest(uint64_t addr, int bytes, int read,
+void Cache::HandleRequest(uint64_t addr, int total_bytes, int read,
                           char *content, int &hit, int &time) {
-    //printf("cache1\n");
+    
+    printf("cache1\n");
 
     hit = 0;
     time = 0;
     uint64_t offset = addr & ((1 << config_.block_bit) - 1);
     uint64_t index = (addr >> config_.block_bit) & ((1 << config_.index_bit) - 1);
     uint64_t tag = addr >> (config_.block_bit + config_.index_bit);
-    printf("addr: %llx, bytes: %d\n", addr, bytes);
+    printf("addr: %llx, bytes: %d\n", addr, total_bytes);
     printf("tag: %llx index: %llx offset: %llx \n", tag, index, offset);
-    if (offset + bytes > config_.block_size){
-        printf("content not in a single block\n");
-        exit(0);
-    }
-
-    //printf("cache2\n");
-    // dertermine whether hit
-    int position = 0;
-    for (int i = 0; i < config_.associativity; ++ i){
-        if (cache_addr[index][i].tag == tag && cache_addr[index][i].valid == TRUE){
-            hit = 1;
-            position = i;
+    //if (offset + bytes > config_.block_size){
+    //    printf("content not in a single block\n");
+    //    exit(0);
+    //}
+    //int content_offset = 0;
+    while(1){
+        int bytes;
+        if (total_bytes == 0)
             break;
+        if(offset + total_bytes > config_.block_size){
+            bytes = config_.block_size - offset;
         }
-    }
+        else
+            bytes = total_bytes;
+        total_bytes -= bytes;
+        printf("tag: %llx index: %llx offset: %llx bytes: %d total_bytes: %d\n", tag, index, offset, bytes, total_bytes);
 
-    //printf("cache3\n");
-    int lower_hit = -1, lower_time = 0;
-    if (read == 1){
-        if (hit == 1)
-            HitCache(index, position);
-        else{
-            //printf("cache3.1\n");
-            char *lower_content = new char[config_.block_size];
-            //printf("cache3.2\n");
-            //int lower_hit, lower_time;
-            uint64_t lower_addr = addr - offset;
-            lower_->HandleRequest(lower_addr, config_.block_size, 1,
-                lower_content, lower_hit, lower_time);
-            //printf("cache3.3\n");
-            position = ReplacePlace(index, tag, lower_content);
-            //printf("cache3.4\n");
-            delete lower_content;
-        }
-        //printf("cache4\n");
-        memcpy(content, cache_addr[index][position].content, bytes);
-
-        //for (int i = 0; i < bytes; ++ i)
-        //    content[i] = cache_addr[index][position].content[offset + i];
-    }
-    else{
-        if (hit == 1){
-            //printf("cache3.1\n");
-            HitCache(index, position);
-            //printf("cache3.2\n");
-            WriteCache(index, position, offset, bytes, content);
-            //printf("cache3.3\n");
-            if (config_.write_through == 1){
-                //int lower_hit, lower_time;
-                lower_->HandleRequest(addr, bytes, 0, 
-                    content, lower_hit, lower_time);
+        printf("cache2\n");
+        // dertermine whether hit
+        int position = 0;
+        for (int i = 0; i < config_.associativity; ++ i){
+            if (cache_addr[index][i].tag == tag && cache_addr[index][i].valid == TRUE){
+                hit = 1;
+                position = i;
+                break;
             }
-            //printf("cache3.4\n");
         }
-        else{
-            //printf("cache3.5\n");
-            if (config_.write_allocate == 1){
-                //printf("cache3.6\n");
+
+        printf("cache3\n");
+        int lower_hit = -1, lower_time = 0;
+        if (read == 1){
+            if (hit == 1)
+                HitCache(index, position);
+            else{
+                //printf("cache3.1\n");
+                printf("block_size:%d\n", config_.block_size);
                 char *lower_content = new char[config_.block_size];
+                //printf("cache3.2\n");
                 //int lower_hit, lower_time;
                 uint64_t lower_addr = addr - offset;
-                printf("lower_addr: %llx\n", lower_addr);
                 lower_->HandleRequest(lower_addr, config_.block_size, 1,
                     lower_content, lower_hit, lower_time);
-                //printf("cache3.7\n");
+                //printf("cache3.3\n");
                 position = ReplacePlace(index, tag, lower_content);
+                //printf("cache3.4\n");
+                delete lower_content;
+            }
+            printf("cache4\n");
+            memcpy(content, cache_addr[index][position].content + offset, bytes);
+
+            for (int i = 0; i < bytes; ++ i)
+                content[i] = cache_addr[index][position].content[offset + i];
+        }
+        else{
+            if (hit == 1){
+                //printf("cache3.1\n");
+                HitCache(index, position);
+                //printf("cache3.2\n");
                 WriteCache(index, position, offset, bytes, content);
-                //printf("cache3.8\n");
+                //printf("cache3.3\n");
                 if (config_.write_through == 1){
-                    int lower_hit, lower_time;
+                    //int lower_hit, lower_time;
                     lower_->HandleRequest(addr, bytes, 0, 
                         content, lower_hit, lower_time);
                 }
-                //printf("cache3.9\n");
+                //printf("cache3.4\n");
             }
             else{
-                //int lower_hit, lower_time;
-                lower_->HandleRequest(addr, bytes, 0, 
-                    content, lower_hit, lower_time);
+                //printf("cache3.5\n");
+                if (config_.write_allocate == 1){
+                    //printf("cache3.6\n");
+                    printf("block_size:%d\n", config_.block_size);
+                    char *lower_content = new char[config_.block_size];
+                    //int lower_hit, lower_time;
+                    uint64_t lower_addr = addr - offset;
+                    printf("lower_addr: %llx\n", lower_addr);
+                    lower_->HandleRequest(lower_addr, config_.block_size, 1,
+                        lower_content, lower_hit, lower_time);
+                    //printf("cache3.7\n");
+                    position = ReplacePlace(index, tag, lower_content);
+                    WriteCache(index, position, offset, bytes, content);
+                    //printf("cache3.8\n");
+                    if (config_.write_through == 1){
+                        int lower_hit, lower_time;
+                        lower_->HandleRequest(addr, bytes, 0, 
+                            content, lower_hit, lower_time);
+                    }
+                    delete lower_content;
+                    //printf("cache3.9\n");
+                }
+                else{
+                    //int lower_hit, lower_time;
+                    lower_->HandleRequest(addr, bytes, 0, 
+                        content, lower_hit, lower_time);
+                }
             }
         }
+        printf("cache5\n");
+        if (hit == 1){
+            time += latency_.bus_latency + latency_.hit_latency;
+            stats_.access_time += time;
+        }
+        else{
+            time += latency_.bus_latency + lower_time;
+            stats_.access_time += latency_.bus_latency;
+        }
+
+        offset = 0;
+        index ++;
+        if (index == config_.set_num){
+            index = 0;
+            tag ++;
+        }
+        content += bytes;
+        addr += bytes;
+    printf("cache6\n");
+    
     }
-    //printf("cache5\n");
-    if (hit == 1){
-        time += latency_.bus_latency + latency_.hit_latency;
-        stats_.access_time += time;
-    }
-    else{
-        time += latency_.bus_latency + lower_time;
-        stats_.access_time += latency_.bus_latency;
-    }
-    //printf("cache6\n");
     printf("\n");
 }
 
@@ -186,11 +213,12 @@ int Cache::ReplacePlace(uint64_t index, uint64_t tag, char* content){
         int lower_hit, lower_time;
         uint64_t lower_addr = (cache_addr[index][position].tag << (config_.block_bit + config_.index_bit))
             + (index << (config_.block_bit)); 
-        lower_->HandleRequest(lower_addr, config_.block_size, 1,
+        lower_->HandleRequest(lower_addr, config_.block_size, 0,
                 cache_addr[index][position].content, lower_hit, lower_time);
     }
 
     //printf("replace2");
+    //memcpy(cache_addr[index][position].content, content, config_.block_size);
     for (int i = 0; i < config_.block_size; ++ i)
         cache_addr[index][position].content[i] = content[i];
     cache_addr[index][position].dirty = FALSE;
