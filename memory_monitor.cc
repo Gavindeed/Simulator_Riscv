@@ -33,37 +33,41 @@ MemoryMonitor::MemoryMonitor(char* filename)
 	}
 	fclose(fd);
 	*/
-
+	printf("monitor\n");
 	memory = new Memory(filename);
 	//llc = new Cache((1<<23), (1<<14), 8, 0, 1, memory);
 	//l2 = new Cache((1<<18), (1<<9), 8, 0, 1, llc);
 	llc = new Cache(256, 1, 16, 0, 1, memory);
 	l2 = new Cache(256, 1, 16, 0, 1, llc);
 	l1 = new Cache(256, 1, 16, 1, 0, memory);
-	//l1 = new Cache((1<<15), (1<<6), 8, 0, 1, memory);
+	///l1 = new Cache((1<<15), (1<<6), 8, 0, 1, memory);
 	entry = memory->entry;
 	inisp = memory->inisp;
-
+	printf("l1\n");
 	StorageStats s;
 	s.access_time = 0;
 	memory->SetStats(s);
 	llc->SetStats(s);
 	l2->SetStats(s);
 	l1->SetStats(s);
+	printf("setstats1\n");
 
 	StorageLatency ml;
 	ml.bus_latency = 6;
 	ml.hit_latency = 100;
 	memory->SetLatency(ml);
+	printf("setstats2\n");
 
 	StorageLatency ll;
 	ll.bus_latency = 3;
 	ll.hit_latency = 10;
 	llc->SetLatency(ll);
+	printf("setstats3\n");
 
 	ll.bus_latency = 2;
 	ll.hit_latency = 6;
 	l2->SetLatency(ll);
+	printf("setstats4\n");
 
 	ll.bus_latency = 1;
 	ll.hit_latency = 3;
