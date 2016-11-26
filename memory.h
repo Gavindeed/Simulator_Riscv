@@ -3,19 +3,22 @@
 
 #include <stdint.h>
 #include "storage.h"
+#include <elf.h>
+#include <math.h> 
 
 class Memory: public Storage {
  public:
-  Memory() {}
+  Memory(char* filename) {}
   ~Memory() {}
 
   // Main access process
   void HandleRequest(uint64_t addr, int bytes, int read,
                      char *content, int &hit, int &time);
-
+  Elf64_Addr entry;
+  Elf64_Addr inisp;
  private:
   // Memory implement
-
+  char simumem[MEMSIZE];
   DISALLOW_COPY_AND_ASSIGN(Memory);
 };
 
