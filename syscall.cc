@@ -32,7 +32,7 @@ void sys_write(lint reg10, lint reg11, lint reg12, Memory *memory){
 	}
 }*/
 
-void sys_write(lint reg10, lint reg11, lint reg12, Memory *memory, RegisterFile *file){
+void sys_write(lint reg10, lint reg11, lint reg12, MemoryMonitor *memory, RegisterFile *file){
 	//printf("sys_write, position: %llx\n", reg11);
 	// we don't have fd
 	if (reg10 != 1){
@@ -50,7 +50,7 @@ void sys_write(lint reg10, lint reg11, lint reg12, Memory *memory, RegisterFile 
 	
 }
 
-void sys_read(lint reg10, lint reg11, lint reg12, Memory *memory, RegisterFile *file)
+void sys_read(lint reg10, lint reg11, lint reg12, MemoryMonitor *memory, RegisterFile *file)
 {
 	//printf("sys_read, position: %llx\n", reg11);
 
@@ -76,7 +76,7 @@ void sys_read(lint reg10, lint reg11, lint reg12, Memory *memory, RegisterFile *
 	
 }
 
-void sys_gettimeofday(lint reg10, Memory *memory){
+void sys_gettimeofday(lint reg10, MemoryMonitor *memory){
 	//printf("sys_gettimeofday\n");
 	struct timeval t;
 	if (gettimeofday(&t, NULL) == 0){
@@ -119,7 +119,7 @@ void sys_lseek(lint reg10, lint reg11, lint reg12, Memory *memory,RegisterFile *
 	file->setInteger(A0, num);
 }*/
 
-void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, Memory *memory, RegisterFile *file, Machine *machine)
+void syscall(lint reg10, lint reg11, lint reg12, lint reg13, lint reg17, MemoryMonitor *memory, RegisterFile *file, Machine *machine)
 {
 	switch(reg17){
 	case SYS_exit:

@@ -6,7 +6,7 @@
 #include <elf.h>
 #include <math.h>
 
-#define MEMSIZE 0x10000000
+
 class MemoryMonitor
 {
 	public:

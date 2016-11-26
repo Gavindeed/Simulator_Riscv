@@ -5,10 +5,10 @@
 #include "storage.h"
 #include <elf.h>
 #include <math.h> 
-
+#define MEMSIZE 0x10000000
 class Memory: public Storage {
  public:
-  Memory(char* filename) {}
+  Memory(char* filename);
   ~Memory() {}
 
   // Main access process

@@ -43,7 +43,7 @@ Machine::Machine(char *filename)
 {
 	//printf("a1 %s\n", filename);
 	registerFile = new RegisterFile();
-	memory = new Memory(filename);
+	memory = new MemoryMonitor(filename);
 	//printf("a2\n");
 	instruction = NULL;
 	registerFile->setPC(memory->entry);

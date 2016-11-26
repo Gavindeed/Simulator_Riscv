@@ -41,7 +41,7 @@ public:
 	
 private:
 	RegisterFile *registerFile;
-	Memory *memory;
+	MemoryMonitor *memory;
 	MachineState state;
 
 	Instruction *instruction;

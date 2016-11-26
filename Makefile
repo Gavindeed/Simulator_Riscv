@@ -1,10 +1,13 @@
 CC = g++
 PROGRAM = riscv
 
-O_FILES = machine.o register_file.o memory_monitor.o instruction.o syscall.o memory.o cache.o
+O_FILES =  machine.o register_file.o memory_monitor.o instruction.o syscall.o memory.o cache.o
 
-$(PROGRAM) : $(O_FILES)
+$(PROGRAM) : main.o $(O_FILES)
 	$(CC) -o $(PROGRAM) main.o $(O_FILES)
+
+lab3 : lab3-main.o memory.o cache.o
+	$(CC) -o lab3 lab3-main.o memory.o cache.o
 
 main.o : main.cc machine.h
 	$(CC) -c main.cc
@@ -35,6 +38,3 @@ lab3-main.o : lab3-main.cc cache.h memory.h param.h
 
 clean : 
 	rm $(PROGRAM) main.o $(O_FILES)
-
-lab3 :
-	$(CC) -o lab3 lab3-main memory.o cache.o
