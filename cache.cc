@@ -126,7 +126,7 @@ void Cache::HandleRequest(uint64_t addr, int total_bytes, int read,
                 delete lower_content;
             }
             printf("cache4\n");
-            memcpy(content, cache_addr[index][position].content + offset, bytes);
+            //memcpy(content, cache_addr[index][position].content + offset, bytes);
 
             for (int i = 0; i < bytes; ++ i)
                 content[i] = cache_addr[index][position].content[offset + i];
