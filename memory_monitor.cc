@@ -3,8 +3,9 @@
 #include "memory_monitor.h"
 #include <memory.h>
 #include <stdio.h>
-Memory::Memory(char* filename)
+MemoryMonitor::MemoryMonitor(char* filename)
 {
+	/*
 	inisp=MEMSIZE-1;
 	char buff_ehdr[70];
 	Elf64_Ehdr* p_ehdr;
@@ -31,32 +32,79 @@ Memory::Memory(char* filename)
 		}
 	}
 	fclose(fd);
+	*/
+
+	memory = new Memory(filename);
+	llc = new Cache((1<<23), (1<<14), 8, 0, 1, memory);
+	l2 = new Cache((1<<18), (1<<9), 8, 0, 1, llc);
+	l1 = new Cache((1<<15), (1<<6), 8, 0, 1, l2);
+
+	entry = memory->entry;
+	inisp = memory->inisp;
+
+	StorageStats s;
+	s.access_time = 0;
+	memory->SetStats(s);
+	llc->SetStats(s);
+	l2->SetStats(s);
+	l1->SetStats(s);
+
+	StorageLatency ml;
+	ml.bus_latency = 6;
+	ml.hit_latency = 100;
+	memory.SetLatency(ml);
+
+	StorageLatency ll;
+	ll.bus_latency = 3;
+	ll.hit_latency = 10;
+	llc->SetLatency(ll);
+
+	ll.bus_latency = 2;
+	ll.hit_latency = 6;
+	l2->SetLatency(ll);
+
+	ll.bus_latency = 1;
+	ll.hit_latency = 3;
+	l1->SetLatency(ll);
 }
 
-Memory::~Memory()
+MemoryMonitor::~MemoryMonitor()
 {
 	printf("Memory Over");	
+	delete cache;
+	delete memory;
 }
 
 void* 
-Memory::Load(lint ad,int length)
+MemoryMonitor::Load(lint ad, int length)
 {
 	char* loadcontent=new char[length];
-	memcpy(loadcontent,simumem+ad,length);
+	//memcpy(loadcontent,simumem+ad,length);
+	int hit;
+	int time;
+	l1->HandleRequest(ad, length, 1, loadcontent, hit, time);
 	return loadcontent;
 }
 
 void
-Memory::Store(lint ad,int length,char*content)
+MemoryMonitor::Store(lint ad,int length, char*content)
 {
-	memcpy(simumem+ad,content,length);
+	//memcpy(simumem+ad,content,length);
+	int hit;
+	int time;
+	l1->HandleRequest(ad, length, 0, content, hit, time);
 	return;
 }
+
+/*
 void * 
 Memory::Translate(lint ad)
 {
-	return (void*)(simumem+ad);
+	//return (void*)(simumem+ad);
+	return 0;
 }
+*/
+
 //#endif
 
 /*
