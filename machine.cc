@@ -72,13 +72,14 @@ void Machine::Run()
 	while(state == Running)
 	{
 		//printf("Run: %lx\n", registerFile->getInteger(8));
-		if(debug) PrintReg();
-		Fetch();
-		Decode();
-		Execute();
-		MemoryAccess();
-		WriteBack();
-		registerFile->setPC(registerFile->getPC()+4);
+		if(debug) PrintReg();//printf("O");
+		//printf("O");
+		Fetch();//printf("F");
+		Decode();//printf("D");
+		Execute();//printf("E");
+		MemoryAccess();//printf("M");
+		WriteBack();//printf("W");
+		registerFile->setPC(registerFile->getPC()+4);//printf("S\n");
 		sumIns ++;
 		//if(verbose) printf("end ins\n");
 	}
@@ -1705,8 +1706,8 @@ void Machine::PrintReg()
 	}
 	printf("$%s: %lx\n", "pc", registerFile->getPC());
 	printf("Please click enter to continue:\n");
-	char c;
-	scanf("%c", &c);
+	char c = 'n';
+	//scanf("%c", &c);
 	if(c == 'r')
 	{
 		debug = false;

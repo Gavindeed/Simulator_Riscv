@@ -2,9 +2,10 @@
 #include <memory.h>
 Memory::Memory(char* filename)
 {
+	memset(simumem, 0, MEMSIZE);
 	if(!filename)
 		return;
-	inisp=MEMSIZE-1;
+	inisp=MEMSIZE-8;
 	char buff_ehdr[70];
 	Elf64_Ehdr* p_ehdr;
 	FILE* fd=fopen(filename,"rb");
