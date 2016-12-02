@@ -31,12 +31,15 @@ Memory::Memory(char* filename)
 		}
 	}
 	fclose(fd);
+	visits = 0;
 }
 void Memory::HandleRequest(uint64_t addr, int bytes, int read,
                           char *content, int &hit, int &time) {
-  hit = 1;
-  time = latency_.hit_latency + latency_.bus_latency;
-  stats_.access_time += time;
+  //hit = 1;
+  time += latency_.hit_latency + latency_.bus_latency;
+  stats_.access_time += latency_.hit_latency + latency_.bus_latency;
+  visits ++;
+  hit = 0;
   //#ifdef SIMULATE
   //printf("memory addr: %llx\n", addr);
   if(read==1)

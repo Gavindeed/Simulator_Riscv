@@ -38,10 +38,11 @@ public:
 	void PrintReg();
 	void addIns(char *ins);
 	void Evaluate();
+	MemoryMonitor *memory;
 	
 private:
 	RegisterFile *registerFile;
-	MemoryMonitor *memory;
+	
 	MachineState state;
 
 	Instruction *instruction;

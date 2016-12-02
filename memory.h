@@ -16,10 +16,16 @@ class Memory: public Storage {
                      char *content, int &hit, int &time);
   Elf64_Addr entry;
   Elf64_Addr inisp;
+
+  void PrintVisits()
+  {
+    printf("Memory Visits: %d\n", visits);
+  }
  private:
   // Memory implement
   char simumem[MEMSIZE];
   DISALLOW_COPY_AND_ASSIGN(Memory);
+  int visits;
 };
 
 #endif //CACHE_MEMORY_H_ 

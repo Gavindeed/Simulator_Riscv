@@ -14,6 +14,7 @@ int main(int argc, char **argv)
 	//machine->SetDebug(true);
 	//machine->SetEvaluate(true);
 	machine->Run();
+	machine->memory->PrintHitTime();
 	printf("Run over!\n");
 	return 0;
 } 

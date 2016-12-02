@@ -15,6 +15,7 @@
 void sys_exit(Machine *machine){
 	printf("the program has exited successfully\n");
 	machine->Evaluate();
+	machine->memory->PrintHitTime();
 	exit(0);
 }
 

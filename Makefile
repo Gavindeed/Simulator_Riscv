@@ -37,4 +37,4 @@ lab3-main.o : lab3-main.cc cache.h memory.h param.h
 	$(CC) -c lab3-main.cc
 
 clean : 
-	rm $(PROGRAM) main.o $(O_FILES)
+	rm $(PROGRAM) main.o $(O_FILES) lab3-main.o lab3

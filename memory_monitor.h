@@ -17,9 +17,13 @@ class MemoryMonitor
 		//void* Translate(lint ad);
 		Elf64_Addr entry;
 		Elf64_Addr inisp;
+		void PrintHitTime();
 	private:
 		char simumem[MEMSIZE];// virtual memory
 		Memory *memory;
 		Cache *l1, *l2, *llc;
+		int time;
+		int hitSum;
+		int request;
 };
 #endif

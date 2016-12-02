@@ -13,29 +13,29 @@ ofstream fout;
 int main(int argc, char **argv) {
   int size, set, way, write_through, write_allocate;
   //cout << "ther" << endl;
-  printf("main1\n");
-  if(argc < 6)
+  //printf("main1\n");
+  if(argc < 7)
   {
     printf("God! Not good enough!\n");
     return 1;
   }
-  printf("main2\n");
+  //printf("main2\n");
   size = atoi(argv[1]);
   set = atoi(argv[2]);
   way = atoi(argv[3]);
   write_through = atoi(argv[4]);
   write_allocate = atoi(argv[5]);
-  printf("main3\n");
+  //printf("main3\n");
   Memory* m = new Memory(NULL);
   Cache* l1 = new Cache(size, set, way, write_through, write_allocate, m);
   l1->SetLower(m);
-  printf("main4\n");
+  //printf("main4\n");
 
   StorageStats s;
   s.access_time = 0;
   m->SetStats(s);
   l1->SetStats(s);
-  printf("main5\n");
+  //printf("main5\n");
 
   StorageLatency ml;
   ml.bus_latency = 6;
@@ -46,20 +46,26 @@ int main(int argc, char **argv) {
   ll.bus_latency = 3;
   ll.hit_latency = 10;
   l1->SetLatency(ll);
-  printf("main6\n");
+  //printf("main6\n");
 
   int hit, time;
   char content[64];
+  int hitNum = 0;
 
-  fin.open("./trace/1.trace", ios::in);
+  fin.open(argv[6], ios::in);
   char q;
   lint address;
   int requestNum = 0;
-  printf("main7\n");
+  //printf("main7\n");
   while(fin >> q)
   {
+    hit = 0;
     fin >> address;
-    printf("q: %c address: %llx\n", q, address);
+    if(address >= (1 << 28))
+    {
+      continue;
+    }
+    //printf("q: %c address: %llx\n", q, address);
     if(q == 'r')
     {
       l1->HandleRequest(address, 1, 1, content, hit, time);
@@ -74,10 +80,11 @@ int main(int argc, char **argv) {
       return 2;
     }
     requestNum ++;
+    hitNum += hit;
   }
   fin.close();
-  printf("main8\n");
-  printf("%d\t%d\t%d\n", hit, requestNum, time);
+  //printf("main8\n");
+  printf("%d\t%d\t%d\n", hitNum, requestNum, time);
 
   //l1.HandleRequest(0, 0, 1, content, hit, time);
   //printf("Request access time: %dns\n", time);
